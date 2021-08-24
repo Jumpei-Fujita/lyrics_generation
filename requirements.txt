@@ -1,0 +1,4 @@
+torch
+transformers==4.4.2 
+sentencepiece==0.1.95
+streamlit 
