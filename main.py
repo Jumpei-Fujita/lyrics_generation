@@ -2,10 +2,26 @@ import streamlit as st
 import torch
 from model import Lyrics_transformer
 
+
+
+def get_x(shitei_array):
+    sep = ['<', '>', '{']
+    new_shitei_array = shitei_array[-3:]
+    x = ''
+    for i in range(len(new_shitei_array)):
+        x = x + new_shitei_array[i] + sep[i]
+    return x, len(new_shitei_array)
+
 st.title('自動歌詞生成')
 status_area = st.empty()
 status_area.write('準備中')
-model = Lyrics_transformer()
+
+d_model = 336
+nhead = 4
+num_layers = 3
+dim_feedforward = 672
+model = Lyrics_transformer(d_model, nhead, num_layers, dim_feedforward)
+
 model.load_state_dict(torch.load('lyrics_transformer2_cpu.pth'))
 status_area.write('準備完了')
 
@@ -14,16 +30,75 @@ status_area.write('準備完了')
 text1 = st.text_input('1行目')
 text2 = st.text_input('2行目')
 text3 = st.text_input('3行目')
-
+texts = [text1, text2, text3]
+shitei_array = []
+for t in texts:
+    if t.replace(' ','').replace('　','') != '':
+        shitei_array.append(t)
+shitei_num = len(shitei_array)
 shitei = st.radio("歌詞を指定しますか?",('する', 'しない'))
+if shitei_num == 0:
+    shitei = 'しない'
 gyou = st.number_input('何行生成しますか?',min_value=1, max_value=10)
 seisei_button = st.button('歌詞を生成')
+
+kashi_c = ['歌詞1','歌詞2','歌詞3']
 if seisei_button:
-    print(shitei)
     if shitei == 'する':
-        st.write('指定しました')
-        print('aaa')
+        st.header('指定しました')
+        col1, col2, col3 = st.columns(3)
+        cols = [col1, col2, col3]
+        for co in range(len(cols)):
+            col = cols[co]
+            col.write('*'+kashi_c[co]+'*')
+            shitei_array = []
+
+            for t in texts:
+                if t.replace(' ','').replace('　','') != '':
+                    shitei_array.append(t)
+            
+            for i in range(gyou):
+                x, g_num = get_x(shitei_array)
+                gene = model.generate(False, x)[0]
+                sep = ['<', '>', '{']
+                for s in sep:
+                    gene = gene.replace(s ,'||')
+                gene = gene.split('||')
+                print(gene)
+                gene_app = gene[-4+g_num:]
+                for g in gene_app:
+                    shitei_array.append(g)
+                if len(shitei_array) > gyou - 1 + shitei_num:
+                    break
+            
+            for ly in shitei_array:
+                col.write(ly)
     else:
-        st.write('指定してしません')
+        st.header('指定してしません')
+        col1, col2, col3 = st.columns(3)
+        cols = [col1, col2, col3]
+        for co in range(len(cols)):
+            col = cols[co]
+            col.write('*'+kashi_c[co]+'*')
+            shitei_array = []
+                       
+        for i in range(gyou):
+            x, g_num = get_x(shitei_array)
+            gene = model.generate(False, x)[0]
+            sep = ['<', '>', '{']
+            for s in sep:
+                gene = gene.replace(s ,'||')
+            gene = gene.split('||')
+            print(gene)
+            gene_app = gene[-4+g_num:]
+            for g in gene_app:
+                shitei_array.append(g)
+            if len(shitei_array) > gyou - 1 + shitei_num:
+                break
+        
+        for ly in shitei_array:
+            col.write(ly)
+
+
 
 
