@@ -75,29 +75,30 @@ if seisei_button:
                 col.write(ly)
     else:
         st.header('指定してしません')
+        shitei_num = 0
         col1, col2, col3 = st.columns(3)
         cols = [col1, col2, col3]
         for co in range(len(cols)):
             col = cols[co]
             col.write('*'+kashi_c[co]+'*')
             shitei_array = []
-                       
-        for i in range(gyou):
-            x, g_num = get_x(shitei_array)
-            gene = model.generate(False, x)[0]
-            sep = ['<', '>', '{']
-            for s in sep:
-                gene = gene.replace(s ,'||')
-            gene = gene.split('||')
-            print(gene)
-            gene_app = gene[-4+g_num:]
-            for g in gene_app:
-                shitei_array.append(g)
-            if len(shitei_array) > gyou - 1 + shitei_num:
-                break
+            
+            for i in range(gyou):
+                x, g_num = get_x(shitei_array)
+                gene = model.generate(False, x)[0]
+                sep = ['<', '>', '{']
+                for s in sep:
+                    gene = gene.replace(s ,'||')
+                gene = gene.split('||')
         
-        for ly in shitei_array:
-            col.write(ly)
+                gene_app = gene[-4+g_num:]
+                for g in gene_app:
+                    shitei_array.append(g)
+                if len(shitei_array) > gyou - 1 + shitei_num:
+                    break
+            
+            for ly in shitei_array:
+                col.write(ly)
 
 
 
